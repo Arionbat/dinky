@@ -98,6 +98,9 @@ public abstract class KubernetesGateway extends AbstractGateway {
         if (TextUtil.isEmpty(jobName)) {
             jobName = this.configuration.getString(KubernetesConfigOptions.CLUSTER_ID.key(), null);
         }
+        if (TextUtil.isEmpty(jobName)) {
+            jobName = config.getClusterConfig().getAppId();
+        }
         if (!isValidTaskName(jobName)) {
             throw new GatewayException(jobName
                     + " is not Valid. In Kubernetes mode, task names must start and end with a lowercase letter or a digit, "
@@ -247,10 +250,10 @@ public abstract class KubernetesGateway extends AbstractGateway {
 
     @Override
     public void killCluster() {
-        log.info("Start kill cluster: " + config.getFlinkConfig().getJobName());
+                String appId = config.getClusterConfig().getAppId();
+        log.info("Start kill cluster: " + appId);
         initConfig();
-        addConfigParas(
-                KubernetesConfigOptions.CLUSTER_ID, config.getFlinkConfig().getJobName());
+        addConfigParas(KubernetesConfigOptions.CLUSTER_ID, appId);
         KubernetesClusterClientFactory clusterClientFactory = new KubernetesClusterClientFactory();
         String clusterId = clusterClientFactory.getClusterId(configuration);
         if (Asserts.isNull(clusterId)) {
