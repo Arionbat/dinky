@@ -250,10 +250,10 @@ public abstract class KubernetesGateway extends AbstractGateway {
 
     @Override
     public void killCluster() {
-                String appId = config.getClusterConfig().getAppId();
+        String appId = config.getClusterConfig().getAppId();
         log.info("Start kill cluster: " + appId);
-        initConfig();
         addConfigParas(KubernetesConfigOptions.CLUSTER_ID, appId);
+        initConfig();
         KubernetesClusterClientFactory clusterClientFactory = new KubernetesClusterClientFactory();
         String clusterId = clusterClientFactory.getClusterId(configuration);
         if (Asserts.isNull(clusterId)) {
