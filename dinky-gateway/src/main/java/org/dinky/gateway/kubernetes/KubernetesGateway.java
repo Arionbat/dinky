@@ -119,6 +119,7 @@ public abstract class KubernetesGateway extends AbstractGateway {
         if (k8sConfiguration.containsKey(oldContainerImageKey)) {
             String containerImageValue = k8sConfiguration.get(oldContainerImageKey);
             k8sConfiguration.put(KubernetesConfigOptions.CONTAINER_IMAGE.key(), containerImageValue);
+            k8sConfiguration.remove(oldContainerImageKey);
         }
         // -------------------Note: the sequence can not be changed, priority problem----------------
         addConfigParas(k8sConfiguration);
