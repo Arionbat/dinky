@@ -174,7 +174,7 @@ jobs:
             FLINK_VERSION=${{ matrix.flink }}
             DINKY_VERSION=${{ inputs.dinky_version }}
           tags: |
-            dinkydocker/dinky-standalone-server:${{ inputs.dinky_version }}-flink${{ matrix.flink }}
+            arionbat/dinky-standalone-server:${{ inputs.dinky_version }}-flink${{ matrix.flink }}
             registry.cn-hangzhou.aliyuncs.com/purei/dinky-standalone-server:${{ inputs.dinky_version }}-flink${{ matrix.flink }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
