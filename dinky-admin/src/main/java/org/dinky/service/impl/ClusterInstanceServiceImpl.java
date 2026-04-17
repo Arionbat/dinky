@@ -174,10 +174,16 @@ public class ClusterInstanceServiceImpl extends SuperServiceImpl<ClusterInstance
             throw new BusException(Status.CLUSTER_INSTANCE_EXIST_RELATIONSHIP);
         }
         ClusterInstance clusterInstance = getById(id);
-        // if cluster instance is not null and cluster instance is health, can not delete, must kill cluster instance
-        // first
-        if (Asserts.isNotNull(clusterInstance) && checkHealth(clusterInstance) && clusterInstance.isAutoRegisters()) {
-            throw new BusException(Status.CLUSTER_INSTANCE_HEALTH_NOT_DELETE);
+        if (Asserts.isNotNull(clusterInstance) && checkHealth(clusterInstance)) {
+            if (clusterInstance.isAutoRegisters()) {
+                throw new BusException(Status.CLUSTER_INSTANCE_HEALTH_NOT_DELETE);
+            }
+            // clusterConfigurationId 不为 null，说明是 Dinky 通过集群配置部署的 k8s session 集群，需要 kill
+            if (clusterInstance.getClusterConfigurationId() != null
+                    && GatewayType.KUBERNETES_SESSION.equalsValue(clusterInstance.getType())) {
+                killCluster(id);
+            }
+            // 手动添加的集群（clusterConfigurationId == null）直接删 DB 记录，不操作 k8s
         }
         return removeById(id);
     }
