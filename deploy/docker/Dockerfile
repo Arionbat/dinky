@@ -1,13 +1,13 @@
 ARG FLINK_VERSION
 ARG DINKY_VERSION
 
-FROM flink:${FLINK_VERSION}-scala_2.12-java8 as builder
+FROM flink:${FLINK_VERSION}-scala_2.12-java11 as builder
 ARG FLINK_VERSION
 ADD build/dinky-release*.tar.gz /opt
 RUN  mv /opt/dinky-release* /opt/dinky  && mkdir /opt/dinky/config/static
 ADD  build/dist/ /opt/dinky/config/static
 
-FROM flink:${FLINK_VERSION}-scala_2.12-java8
+FROM flink:${FLINK_VERSION}-scala_2.12-java11
 ARG FLINK_VERSION
 COPY --from=builder /opt/dinky /opt/dinky
 RUN cp /opt/flink/opt/flink-python*.jar /opt/flink/lib/ && cp /opt/flink/opt/flink-table-planner*.jar /opt/flink/lib/ 2>/dev/null || : && ln -s /opt/flink/lib/*  /opt/dinky/extends/flink${FLINK_VERSION}/
