@@ -67,6 +67,7 @@ jobs:
   build_release:
     name: Build Release
     runs-on: ubuntu-latest
+    environment: docker
     strategy:
       fail-fast: true
       matrix:
@@ -115,6 +116,7 @@ jobs:
   build_image:
     name: build image
     runs-on: ubuntu-latest
+    environment: docker
     needs: [build_front,build_release]
     strategy:
       fail-fast: true
