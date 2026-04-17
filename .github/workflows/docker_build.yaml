@@ -28,6 +28,7 @@ jobs:
   build_front:
     name: Build_WEB
     runs-on: ubuntu-latest
+    environment: docker
     steps:
       - uses: actions/checkout@v3
       - uses: dorny/paths-filter@v2
@@ -69,7 +70,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        flink: [ '1.14', '1.15', '1.16', '1.17', '1.18', '1.19', '1.20' ]
+        flink: [ '1.18', '1.19', '1.20' ]
     env:
       MAVEN_OPTS: -Xmx2G -Xms2G
     steps:
@@ -78,7 +79,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v2
         with:
-          java-version: 8
+          java-version: 11
           distribution: 'adopt'
       - name: Cache local Maven repository
         uses: actions/cache@v3
@@ -148,15 +149,15 @@ jobs:
           # GitHub Repo => Settings => Secrets 增加 docker hub 登录密钥信息
           # DOCKERHUB_USERNAME 是 docker hub 账号名.
           # DOCKERHUB_TOKEN: docker hub => Account Setting => Security 创建.
-          username: ${{ secrets.DOCKER_IO_USER  }}
-          password: ${{ secrets.DOCKER_IO_PASS  }}
+          username: ${{ secrets.DOCKER_HUB_USERNAME  }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD  }}
       # 登录 aliyun docker hub
       - name: Login to Aliyun Docker
         uses: docker/login-action@v3
         with:
           registry: registry.cn-hangzhou.aliyuncs.com
-          username: ${{ secrets.DOCKER_ALIYUN_USER  }}
-          password: ${{ secrets.DOCKER_ALIYUN_PASS }}
+          username: ${{ secrets.ACR_USERNAME  }}
+          password: ${{ secrets.ACR_PASSWORD }}
       # 构建 Docker 并推送到 Docker hub
       - name: Build and push
         id: docker_build
@@ -172,6 +173,6 @@ jobs:
             DINKY_VERSION=${{ inputs.dinky_version }}
           tags: |
             dinkydocker/dinky-standalone-server:${{ inputs.dinky_version }}-flink${{ matrix.flink }}
-            registry.cn-hangzhou.aliyuncs.com/dinky/dinky-standalone-server:${{ inputs.dinky_version }}-flink${{ matrix.flink }}
+            registry.cn-hangzhou.aliyuncs.com/purei/dinky-standalone-server:${{ inputs.dinky_version }}-flink${{ matrix.flink }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
