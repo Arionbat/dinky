@@ -14,11 +14,10 @@ FROM flink:${FLINK_VERSION}-scala_2.12-java11
 ARG FLINK_VERSION
 
 # ── 文件系统插件 → plugins/ ───────────────────────────────────────────
-# ── 文件系统插件 → plugins/ ───────────────────────────────────────────
-RUN mkdir -p $FLINK_HOME/plugins/s3-fs-hadoop \
+RUN mkdir -p $FLINK_HOME/plugins/s3-fs-presto \
     $FLINK_HOME/plugins/oss-fs-hadoop && \
-    cp $FLINK_HOME/opt/flink-s3-fs-hadoop-*.jar \
-    $FLINK_HOME/plugins/s3-fs-hadoop/ && \
+    cp $FLINK_HOME/opt/flink-s3-fs-presto-*.jar \
+    $FLINK_HOME/plugins/s3-fs-presto/ && \
     cp $FLINK_HOME/opt/flink-oss-fs-hadoop-*.jar \
     $FLINK_HOME/plugins/oss-fs-hadoop/
 

@@ -24,6 +24,11 @@ public class DinkyKubernetsConstants {
     public static final String DINKY_CONF_VOLUME = "dinky-config-volume";
     public static final String DINKY_CONF_VOLUME_PERFIX = "dinky-config-";
 
+    public static final String DINKY_POD_TEMPLATE_VOLUME = "dinky-pod-template-volume";
+    public static final String DINKY_POD_TEMPLATE_CONFIGMAP_PREFIX = "dinky-pod-template-";
+    public static final String DINKY_POD_TEMPLATE_CONFIGMAP_KEY = "default.yaml";
+    public static final String DINKY_POD_TEMPLATE_IN_CONTAINER_PATH = "/opt/flink/pod-templates/default.yaml";
+
     public static final String DINKY_K8S_INGRESS_ENABLED_KEY = "kubernetes.ingress.enabled";
     public static final String DINKY_K8S_INGRESS_DOMAIN_KEY = "kubernetes.ingress.domain";
 }

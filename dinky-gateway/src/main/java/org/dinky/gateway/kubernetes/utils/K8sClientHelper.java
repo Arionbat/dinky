@@ -35,7 +35,9 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.yaml.snakeyaml.DumperOptions;
@@ -43,10 +45,15 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.nodes.Tag;
 import org.yaml.snakeyaml.representer.Representer;
 
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodBuilder;
+import io.fabric8.kubernetes.api.model.Volume;
+import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
@@ -69,6 +76,7 @@ public class K8sClientHelper {
     protected Configuration configuration;
     private DinkySqlConfigMapDecorate sqlFileDecorate;
     private DeploymentStatusWatcher deploymentStatusWatch;
+    private String podTemplateContent;
 
     public K8sClientHelper(Configuration configuration, String kubeConfig) {
         this.configuration = configuration;
@@ -144,6 +152,58 @@ public class K8sClientHelper {
         deploymentRollableScalableResource.watch(deploymentStatusWatch);
         kubernetesClient.resourceList(resources).createOrReplace();
         return deployment;
+    }
+
+    /**
+     * Store pod template YAML content so it can be uploaded to a ConfigMap before deployment.
+     * Required in Application mode where the JM container needs to read the TM pod template.
+     */
+    public void storePodTemplateContent(String content) {
+        this.podTemplateContent = content;
+    }
+
+    /**
+     * Add a volume to the given pod that mounts the pod-template ConfigMap at a known in-container
+     * path. The JM pod needs this so that it can read the TM pod template from inside the container.
+     */
+    public Pod addPodTemplateConfigMapVolume(Pod pod) {
+        String configMapName = DinkyKubernetsConstants.DINKY_POD_TEMPLATE_CONFIGMAP_PREFIX
+                + configuration.get(KubernetesConfigOptions.CLUSTER_ID);
+        Volume volume = new VolumeBuilder()
+                .withName(DinkyKubernetsConstants.DINKY_POD_TEMPLATE_VOLUME)
+                .withNewConfigMap()
+                .withName(configMapName)
+                .endConfigMap()
+                .build();
+        return new PodBuilder(pod)
+                .editOrNewSpec()
+                .addNewVolumeLike(volume)
+                .endVolume()
+                .endSpec()
+                .build();
+    }
+
+    /**
+     * Create the pod-template ConfigMap in Kubernetes. Must be called before TM pods are created.
+     */
+    public void createPodTemplateConfigMap() {
+        if (podTemplateContent == null) {
+            return;
+        }
+        String clusterId = configuration.get(KubernetesConfigOptions.CLUSTER_ID);
+        String namespace = configuration.get(KubernetesConfigOptions.NAMESPACE);
+        String configMapName = DinkyKubernetsConstants.DINKY_POD_TEMPLATE_CONFIGMAP_PREFIX + clusterId;
+        Map<String, String> data = new HashMap<>();
+        data.put(DinkyKubernetsConstants.DINKY_POD_TEMPLATE_CONFIGMAP_KEY, podTemplateContent);
+        ConfigMap configMap = new ConfigMapBuilder()
+                .withNewMetadata()
+                .withName(configMapName)
+                .withNamespace(namespace)
+                .endMetadata()
+                .addToData(data)
+                .build();
+        kubernetesClient.configMaps().inNamespace(namespace).createOrReplace(configMap);
+        log.info("Created pod template ConfigMap: {}/{}", namespace, configMapName);
     }
 
     /**
