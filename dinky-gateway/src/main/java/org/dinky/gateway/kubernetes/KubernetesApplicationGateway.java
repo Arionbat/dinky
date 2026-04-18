@@ -101,10 +101,6 @@ public class KubernetesApplicationGateway extends KubernetesGateway {
         try (KubernetesClient kubernetesClient = getK8sClientHelper().getKubernetesClient()) {
             logger.info("Start submit k8s application.");
 
-            // Create the pod-template ConfigMap before deployment so that the JM container can
-            // mount it and read the TM pod template from inside the container.
-            getK8sClientHelper().createPodTemplateConfigMap();
-
             ClusterClientProvider<String> clusterClient =
                     deployApplication(getK8sClientHelper().getClient());
 

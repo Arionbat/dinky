@@ -152,20 +152,12 @@ public abstract class KubernetesGateway extends AbstractGateway {
         String defaultPodTemplateStr = k8sClientHelper.dumpPod2Str(defaultPodTemplate);
 
         if (getType().isApplicationMode() && !TextUtil.isEmpty(defaultPodTemplateStr)) {
-            // In Application mode the JM runs inside a k8s container and reads the TM pod template
-            // from the filesystem at runtime. The local Dinky-server path is not accessible inside
-            // the container. We store the template in a ConfigMap (created before deployment) and
-            // mount it into the JM pod so the JM can read it to create TM pods.
-            k8sClientHelper.storePodTemplateContent(defaultPodTemplateStr);
-
-            // JM pod template = user template + volume that mounts the ConfigMap
-            Pod jmPodWithMount = k8sClientHelper.addPodTemplateConfigMapVolume(defaultPodTemplate);
-            preparPodTemplate(k8sClientHelper.dumpPod2Str(jmPodWithMount), KubernetesConfigOptions.JOB_MANAGER_POD_TEMPLATE);
-
-            // TM pod template points to the in-container path where the ConfigMap is mounted
-            addConfigParas(
-                    KubernetesConfigOptions.TASK_MANAGER_POD_TEMPLATE,
-                    org.dinky.gateway.kubernetes.utils.DinkyKubernetsConstants.DINKY_POD_TEMPLATE_IN_CONTAINER_PATH);
+            // In Application mode, Flink's PodTemplateMountDecorator automatically reads the TM
+            // pod template from a local file, creates a ConfigMap, and mounts it into the JM pod
+            // so the JM can read the TM template from inside the container. We just need to write
+            // the template to local files and set the config keys.
+            preparPodTemplate(defaultPodTemplateStr, KubernetesConfigOptions.JOB_MANAGER_POD_TEMPLATE);
+            preparPodTemplate(defaultPodTemplateStr, KubernetesConfigOptions.TASK_MANAGER_POD_TEMPLATE);
         } else {
             preparPodTemplate(defaultPodTemplateStr, KubernetesConfigOptions.KUBERNETES_POD_TEMPLATE);
         }
