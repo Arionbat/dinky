@@ -41,7 +41,7 @@ RUN apt-get update && \
     python3-dev && \
     pip3 install --no-cache-dir \
     # PyFlink 核心
-    apache-flink==${FLINK_VERSION} \
+    apache-flink==1.20.3 \
     # Pandas UDF 必须（ETL/聚合计算常用）
     pandas \
     pyarrow \
