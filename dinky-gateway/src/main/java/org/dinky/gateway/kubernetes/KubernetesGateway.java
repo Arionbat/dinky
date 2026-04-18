@@ -33,6 +33,7 @@ import org.dinky.utils.TextUtil;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.configuration.ConfigOption;
+import org.apache.flink.configuration.ConfigOptions;
 import org.apache.flink.configuration.CoreOptions;
 import org.apache.flink.configuration.DeploymentOptions;
 import org.apache.flink.configuration.DeploymentOptionsInternal;
@@ -119,13 +120,16 @@ public abstract class KubernetesGateway extends AbstractGateway {
         // 兼容kubernetes.container.image 和 kubernetes.container.image.ref
         Map<String, String> k8sConfiguration = k8sConfig.getConfiguration();
         final String oldContainerImageKey = "kubernetes.container.image";
-        if (k8sConfiguration.containsKey(oldContainerImageKey)) {
+        if (k8sConfiguration.containsKey(oldContainerImageKey)
+                && !k8sConfiguration.containsKey(KubernetesConfigOptions.CONTAINER_IMAGE.key())) {
             String containerImageValue = k8sConfiguration.get(oldContainerImageKey);
             k8sConfiguration.put(KubernetesConfigOptions.CONTAINER_IMAGE.key(), containerImageValue);
-            k8sConfiguration.remove(oldContainerImageKey);
         }
         // -------------------Note: the sequence can not be changed, priority problem----------------
         addConfigParas(k8sConfiguration);
+        // Remove old key from Flink configuration to avoid YAML serialization conflict, without modifying original Map
+        configuration.removeConfig(
+                ConfigOptions.key(oldContainerImageKey).stringType().noDefaultValue());
         addConfigParas(flinkConfig.getConfiguration());
         // -------------------------------------------
         addConfigParas(DeploymentOptions.TARGET, getType().getLongValue());
